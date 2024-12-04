@@ -53,7 +53,6 @@ public class MATC extends AbstractVerticle {
 
 	private final String startedTime = LocalDateTime.now().toString();
 
-
 	public static String MAIL_USER = "";
 
 	private ITokenService tokenService;
@@ -104,7 +103,7 @@ public class MATC extends AbstractVerticle {
 		
 		
 		System.out.println("******************************************");
-		System.out.println("* Quant-UX-Server " + VERSION + " launched at " + config.getInteger("http.port") + "");
+		System.out.println("* Quant-UX-Server " + VERSION + " launched at " + config.getInteger("http.port"));
 		System.out.println("******************************************");
 	}
 
@@ -132,8 +131,12 @@ public class MATC extends AbstractVerticle {
 		}
 
 		if (config.containsKey(Config.MAIL_USER)) {
-			this.logger.info("start() > set mail user", MAIL_USER);
+			this.logger.info("start() > set mail user");
 			MAIL_USER = config.getString(Config.MAIL_USER);
+		}
+
+		if (config.containsKey(Config.MAIL_FROM)) {
+			MAIL_USER = config.getString(Config.MAIL_FROM);
 		}
 		return config;
 	}
@@ -176,7 +179,7 @@ public class MATC extends AbstractVerticle {
 		QUXTokenService tokenService = new QUXTokenService();
 		if (config.containsKey(Config.JWT_PASSWORD)){
 			String jwtSecret = config.getString(Config.JWT_PASSWORD);
-			if (jwtSecret.trim().length() > 0) {
+			if (!jwtSecret.trim().isEmpty()) {
 				tokenService.setSecret(jwtSecret);
 			} else {
 				logger.error("initQUXTokenService() > Password is empty");
@@ -210,11 +213,12 @@ public class MATC extends AbstractVerticle {
 
 		JsonObject mailConfig = Config.getMail(config);
 		if (mailConfig.containsKey("user")){
+			String mailFrom = mailConfig.containsKey("from") ? mailConfig.getString("from") : mailConfig.getString("user");
 			mail = createMail(mailConfig);
 			MailHandler.start(
 				vertx,
 				mail,
-				mailConfig.getString("user"),
+				mailFrom,
 				Config.getHttpHost(config)
 			);
 		}
